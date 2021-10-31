@@ -1,13 +1,50 @@
 #!/bin/bash
 
+if [[ "$1" == '--help' ]]; then
+   echo "Usage: mbfd [options]"
+	echo "       mbfd <./path/to/disk/image.iso>"
+	echo ""
+	echo "Options:"
+	echo "  --help:	display this message"
+	echo "  --restore:	restore a flash drive so it can be used like before"
+	echo ""
+	echo "'sudo mbfd ./image.iso' will start the interactive ISO flashing process. Note the sudo!"
+   exit 1
+fi
+
+if [[ "$1" == '--restore' ]]; then
+	echo "Select flash drive to restore:"
+	echo ""
+	# display a list of external devices (flash drives)
+	diskutil list external
+	echo ""
+
+	# ask for flash drive name
+	echo ""
+	read -p 'Your flash drive device name (something like "/dev/disk4" without quotes): ' flashDriveName
+
+	echo ""
+	read -p "The device you entered will be erased. Is that ok? (yes/no): " confirmation
+	if [ "$confirmation" != 'yes' ] 
+	then
+		exit 0
+	fi
+
+	# make a GPT partition
+	diskutil partitionDisk $flashDriveName GPT FAT32 UNTITLED 0b
+
+	echo ""
+	echo "Success!"
+
+   exit 1
+fi
+
 # check if not root
 if [[ $EUID -ne 0 ]]; then
    echo "This program must be run as root" 
    exit 1
 fi
 
-echo "Hello."
-echo ""
 echo "This program will help you to make a bootable USB drive from the ISO disk image."
 echo "This program will do the following:"
 echo ""
@@ -23,7 +60,7 @@ echo "[Press Any Key]"
 
 read
 
-# display a list of devices
+# display a list of external devices (flash drives)
 diskutil list external
 
 # ask for flash drive name
@@ -32,7 +69,7 @@ read -p 'Your flash drive device name (something like "/dev/disk4" without quote
 
 echo ""
 read -p "The device you entered will be erased. Is that ok? (yes/no): " confirmation
-if [ "$choice" != 'yes' ] 
+if [ "$confirmation" != 'yes' ] 
 then
 	exit 0
 fi
